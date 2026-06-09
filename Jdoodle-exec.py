@@ -1,17 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-=============================================================================
- VERSAO DE ARQUIVO UNICO (para rodar no JDoodle)
-=============================================================================
- Esta e a uniao dos modulos config / texto / fitness / operadores /
- algoritmo_genetico / main em um unico arquivo, porque o JDoodle gratuito
- executa apenas UM arquivo .py.
-
- A versao organizada em modulos (mais facil de explicar) esta na pasta do
- projeto; esta aqui e funcionalmente identica.
-=============================================================================
-"""
-
 import random
 import re
 import time
