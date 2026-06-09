@@ -19,6 +19,7 @@ import time
 # ============================== PARAMETROS =================================
 PADRAO = "A casa em que moro é própria"   # >>> TROQUE A CADA TESTE <<<
 ARQUIVO_ENTRADA   = "dom_casmurro.txt"
+ARQUIVO_ENTRADA_2 = "/uploads/dom_casmurro.txt"
 
 TAMANHO_POPULACAO = 120
 NUMERO_GERACOES   = 150
@@ -42,16 +43,22 @@ Matacavalos, dando-lhe o mesmo aspecto e economia daquela outra, que desapareceu
 
 # =============================== ENTRADA ===================================
 def carregar_texto():
-    try:
-        with open(ARQUIVO_ENTRADA, "r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError:
-        print("[AVISO] '%s' nao encontrado. Usando texto de exemplo embutido.\n"
-              % ARQUIVO_ENTRADA)
-        return TEXTO_FALLBACK
-    except UnicodeDecodeError:
-        with open(ARQUIVO_ENTRADA, "r", encoding="latin-1") as f:
-            return f.read()
+    caminhos = [ARQUIVO_ENTRADA, ARQUIVO_ENTRADA_2]
+    for caminho in caminhos:
+        try:
+            with open(caminho, "r", encoding="utf-8") as f:
+                print("[OK] Arquivo carregado de '%s'." % caminho)
+                return f.read()
+        except FileNotFoundError:
+            continue
+        except UnicodeDecodeError:
+            with open(caminho, "r", encoding="latin-1") as f:
+                print("[OK] Arquivo carregado de '%s' (latin-1)." % caminho)
+                return f.read()
+
+    print("[AVISO] Arquivo nao encontrado em nenhum dos caminhos. "
+          "Usando texto de exemplo embutido.\n")
+    return TEXTO_FALLBACK
 
 
 def normalizar(s):
