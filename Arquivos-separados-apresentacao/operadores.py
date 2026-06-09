@@ -30,10 +30,37 @@ def criar_individuo(n_texto, n_padrao):
     return [inicio, comp]
 
 
-def populacao_inicial(n_texto, n_padrao):
-    """Populacao inicial totalmente aleatoria, espalhada pelo texto."""
-    return [criar_individuo(n_texto, n_padrao)
-            for _ in range(config.TAMANHO_POPULACAO)]
+def semear_com_trigramas(texto, padrao, n_sementes):
+    """Gera individuos 'inteligentes' ancorados em substrings do padrao."""
+    sementes  = []
+    n_padrao  = len(padrao)
+    n_texto   = len(texto)
+    tam_grama = max(3, n_padrao // 4)
+
+    for i in range(0, n_padrao - tam_grama + 1, max(1, tam_grama // 2)):
+        grama = padrao[i: i + tam_grama]
+        pos   = texto.find(grama)
+        while pos != -1 and len(sementes) < n_sementes:
+            inicio = max(0, pos - i)
+            comp   = random.randint(
+                max(1, n_padrao - config.FOLGA_TAMANHO),
+                n_padrao + config.FOLGA_TAMANHO
+            )
+            if inicio + comp <= n_texto:
+                sementes.append([inicio, comp])
+            pos = texto.find(grama, pos + 1)
+    return sementes
+
+
+def populacao_inicial(texto, padrao):
+    """Populacao inicial com sementes de trigramas + individuos aleatorios."""
+    n_texto  = len(texto)
+    n_padrao = len(padrao)
+    n_sementes = config.TAMANHO_POPULACAO // 5
+    sementes   = semear_com_trigramas(texto, padrao, n_sementes)
+    aleatorios = [criar_individuo(n_texto, n_padrao)
+                  for _ in range(config.TAMANHO_POPULACAO - len(sementes))]
+    return sementes + aleatorios
 
 
 # ------------------------------- SELECAO -----------------------------------
@@ -87,19 +114,23 @@ def crossover(p1, p2):
 
 def mutacao(individuo, n_texto, n_padrao):
     """
-    Mutacao:
-      - posicao inicial: 70% ajuste fino local (+/- 15);
-                         30% salto aleatorio (mantem diversidade);
-      - comprimento:     +/- 1 ou 2 (trata insercoes/delecoes).
+    Mutacao em 3 niveis de amplitude:
+      - 60%: ajuste fino local (+/- 8)  — explora a vizinhança imediata
+      - 25%: salto medio (+/- 50)       — sai de otimos locais proximos
+      - 15%: posicao aleatoria          — mantem diversidade global
+    Comprimento: +/- 1 ou 2 (trata insercoes/delecoes).
     No fim, garante que o individuo continua valido (dentro do texto).
     """
     novo = [individuo[0], individuo[1]]
 
     if random.random() < config.TAXA_MUTACAO:
-        if random.random() < 0.7:
-            novo[0] += random.randint(-15, 15)               # ajuste fino
+        r = random.random()
+        if r < 0.60:
+            novo[0] += random.randint(-8, 8)               # ajuste fino
+        elif r < 0.85:
+            novo[0] += random.randint(-50, 50)             # salto medio
         else:
-            novo[0] = random.randint(0, max(0, n_texto - 1)) # salto
+            novo[0] = random.randint(0, max(0, n_texto - 1))  # salto global
 
     if random.random() < config.TAXA_MUTACAO:
         novo[1] += random.choice([-2, -1, 1, 2])

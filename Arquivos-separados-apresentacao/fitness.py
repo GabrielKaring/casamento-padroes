@@ -14,6 +14,9 @@ A distancia de edicao (Levenshtein) conta o numero minimo de:
   - substituicoes
 necessarias para transformar uma string na outra. Por isso o AG tolera
 pequenas variacoes (acentos, letras trocadas, palavras a mais/menos).
+
+O dicionario `memo` e passado como parametro (nao e global) para que cada
+busca tenha seu proprio cache e nao haja vazamento entre padroes diferentes.
 -----------------------------------------------------------------------------
 """
 
@@ -51,17 +54,13 @@ def similaridade(a, b):
     return 1.0 - distancia_edicao(a, b) / m
 
 
-# Memoizacao: guarda o fitness ja calculado de cada (inicio, comprimento).
-# Quando o AG converge, muitos individuos se repetem -> ganho de velocidade.
-MEMO = {}
-
-
-def fitness(individuo, texto, padrao):
-    """Avalia um individuo: similaridade entre o trecho apontado e o padrao."""
+def fitness(individuo, texto, padrao, memo):
+    """Avalia um individuo: similaridade entre o trecho apontado e o padrao.
+    memo e isolado por padrao — sem vazamento de cache entre buscas."""
     chave = (individuo[0], individuo[1])
-    if chave in MEMO:
-        return MEMO[chave]
+    if chave in memo:
+        return memo[chave]
     trecho = texto[individuo[0]: individuo[0] + individuo[1]]
     valor = similaridade(padrao, trecho)
-    MEMO[chave] = valor
+    memo[chave] = valor
     return valor
